@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell", 
+			"label": "build",  //与launch.json中"preLaunchTask"对应
+			"command": "cd ${workspaceFolder}/build;cmake ..;make -j4",  //编译过程，用分号隔开
+			"args": [],  //编译的参数，对于cmake变异来说不需要
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+		}
+	]
+}
