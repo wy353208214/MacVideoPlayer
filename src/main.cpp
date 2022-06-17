@@ -11,6 +11,7 @@
 #include <fstream>
 #include <stdio.h>
 #include "image_util.h"
+#include "flv_parase.h"
 
 extern "C"
 {
@@ -98,6 +99,7 @@ atomic_bool isPause(false);
 
 ofstream out;
 FILE *pFile;
+bool saveKeyFrame = false;
 int a_c = 0;
 
 void openFile();
@@ -123,16 +125,12 @@ void aac_parser(char *url);
 
 int main()
 {
-
     // const char *path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/test_u.yuv";
     // out = std::ofstream(path, std::ios_base::binary);
     // pFile = fopen(path,  "wb+");
-
     //打开文件
     openFile();
-
-    // char *path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/CMakeLists.txt";
-    // aac_parser(path);
+    // paraseFlv("/Users/steven/Movies/Video/S8.flv");
 
     return 0;
 }
@@ -419,12 +417,13 @@ void decodeVideoFrame()
 
         // saveFrameToYuv(videoFrame);
         if(videoFrame->key_frame) {
-            string path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/png/";
+            string path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/imgs/";
             path.append(to_string(av_gettime()));
-            // path.append(".jpg");
-            path.append(".png");
-            saveFrameToImage(videoFrame, videoCodecCtx, path.c_str(), PNG);
+            path.append(".jpg");
+            // path.append(".png");
+            saveFrameToImage(videoFrame, videoCodecCtx, path.c_str(), JPG);
             // saveFrameToJpg(videoFrame, path.c_str());
+            // saveFrameToPng(videoFrame, videoCodecCtx, path.c_str());
         }
         
         //通知刷新页面，并将数据传递到SDL事件中

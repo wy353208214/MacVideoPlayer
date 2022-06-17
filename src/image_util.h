@@ -1,3 +1,4 @@
+// 保存AVFrame为图片的工具
 #ifndef IMAGE_UTIL_H
 #define IMAGE_UTIL_H
 

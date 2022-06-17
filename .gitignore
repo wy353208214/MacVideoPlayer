@@ -33,4 +33,6 @@
 
 /build
 /runtime
-/png
+/log
+
+.DS_Store
