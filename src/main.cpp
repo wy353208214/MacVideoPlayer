@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/thread/thread.hpp>
+#include <boost/lexical_cast.hpp>
 #include <thread>
 #include "block_queue_use_vector.h"
 #include <atomic>
@@ -15,21 +16,24 @@
 
 extern "C"
 {
-#include "libavformat/avformat.h"
-#include "libavutil/channel_layout.h"
-#include "libavutil/opt.h"
-#include "libavutil/mathematics.h"
-#include "libavutil/timestamp.h"
-#include "libswscale/swscale.h"
-#include "libavutil/imgutils.h"
-#include "libavutil/time.h"
-#include "libswresample/swresample.h"
-#include "libavfilter/avfilter.h"
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_thread.h"
+    #include "libavformat/avformat.h"
+    #include "libavutil/channel_layout.h"
+    #include "libavutil/opt.h"
+    #include "libavutil/mathematics.h"
+    #include "libavutil/timestamp.h"
+    #include "libswscale/swscale.h"
+    #include "libavutil/imgutils.h"
+    #include "libavutil/time.h"
+    #include "libswresample/swresample.h"
+    #include "libavfilter/avfilter.h"
+    #include "SDL2/SDL.h"
+    #include "SDL2/SDL_thread.h"
 };
 
 using namespace std;
+
+// 是否保存关键帧
+const bool isSaveKeyFrame = false;
 
 const AVPixelFormat AV_PIX_FMT = AV_PIX_FMT_YUV420P;
 // 要转换输出的音频声道
@@ -99,7 +103,6 @@ atomic_bool isPause(false);
 
 ofstream out;
 FILE *pFile;
-bool saveKeyFrame = false;
 int a_c = 0;
 
 void openFile();
@@ -125,34 +128,60 @@ void aac_parser(char *url);
 
 int main()
 {
+    // 解析FLV文件
+    // paraseFlv("/Users/steven/Movies/Video/S8.flv");
+
+    // 要保存的yuv文件
     // const char *path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/test_u.yuv";
     // out = std::ofstream(path, std::ios_base::binary);
     // pFile = fopen(path,  "wb+");
+
     //打开文件
     openFile();
-    // paraseFlv("/Users/steven/Movies/Video/S8.flv");
-
     return 0;
 }
 
 void openFile()
 {
-    // char *url =  "/Users/steven/Movies/Video/S8.mp4";
-    // char *url =  "/Users/steven/Movies/ManyCam/My Recording.mp4";
-    // ffmpeg -re -i /Users/steven/Movies/Video/S8.mp4 -vcodec libx264 -acodec aac -f flv rtmp://localhost:1935/live/test
-    // char *url =  "http://localhost:8889/flv?port=1935&app=live&stream=test";
-    // char *url = "/Users/steven/Movies/Video/luoxiang.mp4";
+    string urls[4] = {
+        "/Users/steven/Movies/Video/S8.mp4",
+        "/Users/steven/Movies/ManyCam/My Recording.mp4",
+        "http://localhost:8889/flv?port=1935&app=live&stream=test",
+        "/Users/steven/Movies/Video/luoxiang.mp4"
+    };
+
+    string url;
+    string selectStr;
+    selectStr.append("1. ").append(urls[0]).append("\n")
+            .append("2. ").append(urls[1]).append("\n")
+            .append("3. ").append(urls[2]).append("\n")
+            .append("4. ").append(urls[3]);
+    cout<<"请选择或输入一个视频链接："<<endl;
+    cout<<selectStr<<endl;
+    cout<<"Enter：";
+
+    getline(cin, url);
+    int selectNumber = 1;
+    try
+    {
+        selectNumber = boost::lexical_cast<int>(url.c_str());
+        if(selectNumber > 4 || selectNumber < 0) {
+            spdlog::error("Enter error number! It will play the first one.");
+            selectNumber = 1;
+        }
+        url = urls[selectNumber - 1];
+    }
+    catch(boost::bad_lexical_cast const&)
+    {
+        if (url == "n") {
+            selectNumber = 1;
+            url = urls[selectNumber - 1];
+        }
+    }
+    spdlog::info("Video url is \"{}\"", url);
 
     pause_mutex = SDL_CreateMutex();
     pause_cond = SDL_CreateCond();
-
-    string url;
-    cout << "请输入视频链接url：";
-    getline(cin, url);
-    if (url == "n")
-    {
-        url = "/Users/steven/Movies/Video/S8.mp4";
-    }
 
     // av_register_all(); 新版ffmpeg已经不需要注册了
     avformat_network_init();
@@ -291,10 +320,6 @@ void openFile()
         }
     }
 
-    //这里重新通知一遍跳出wait死循环
-    // video_packet_queue.notifyAll();
-    // audio_packet_queue.notifyAll();
-
     //释放内存
     avcodec_free_context(&videoCodecCtx);
     avcodec_free_context(&audioCodecCtx);
@@ -416,14 +441,12 @@ void decodeVideoFrame()
         int video_delay = (int)(actual_delay * 1000 + 0.5);
 
         // saveFrameToYuv(videoFrame);
-        if(videoFrame->key_frame) {
+        if(videoFrame->key_frame && isSaveKeyFrame) {
             string path = "/Users/steven/Dev_Project/Cpp-Study/MyVideoPlayer/imgs/";
             path.append(to_string(av_gettime()));
             path.append(".jpg");
             // path.append(".png");
             saveFrameToImage(videoFrame, videoCodecCtx, path.c_str(), JPG);
-            // saveFrameToJpg(videoFrame, path.c_str());
-            // saveFrameToPng(videoFrame, videoCodecCtx, path.c_str());
         }
         
         //通知刷新页面，并将数据传递到SDL事件中
