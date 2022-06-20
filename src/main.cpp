@@ -6,7 +6,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/lexical_cast.hpp>
 #include <thread>
-#include "block_queue_use_vector.h"
+#include "block/block_queue_use_vector.h"
 #include <atomic>
 #include <iomanip>
 #include <fstream>
@@ -155,10 +155,11 @@ void openFile()
     selectStr.append("1. ").append(urls[0]).append("\n")
             .append("2. ").append(urls[1]).append("\n")
             .append("3. ").append(urls[2]).append("\n")
-            .append("4. ").append(urls[3]);
+            .append("4. ").append(urls[3]).append("\n")
+            .append("Or enter the video url");
     cout<<"请选择或输入一个视频链接："<<endl;
     cout<<selectStr<<endl;
-    cout<<"Enter：";
+    cout<<"Enter url：";
 
     getline(cin, url);
     int selectNumber = 1;
