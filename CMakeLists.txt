@@ -10,9 +10,9 @@ set(FMT_DIR /usr/local/Cellar/fmt/7.1.3)
 set(XCODE_DIR /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/)
 
 # ffmpeg安装目录
-set(FFMPEG /usr/local/Cellar/ffmpeg/4.3.1_9)
+set(FFMPEG /usr/local/Cellar/ffmpeg/4.4.1_5)
 # 设置SDL目录
-set(SDL /usr/local/Cellar/sdl2/2.0.14_1)
+set(SDL /usr/local/Cellar/sdl2/2.0.22)
 
 # 设置编译模式为DEBUG，否则不可debug
 set(CMAKE_BUILD_TYPE DEBUG) 
@@ -47,10 +47,11 @@ include_directories(
     ${SDL}/include
     ${Boost_INCLUDE_DIRS}
 )
+
 # 声明动态库位置
 link_directories(
     ${SPDLOG_DIR}/lib
-    ${FMT_DIR}/lib/
+    ${FMT_DIR}/lib
     # ${XCODE_DIR}
     ${FFMPEG}/lib
     ${SDL}/lib
@@ -58,6 +59,19 @@ link_directories(
 
 # 设置可执行文件
 add_executable(worker ${APP_SRC})
+
+# target_include_directories(
+#     worker
+#     INTERFACE
+#     ${SPDLOG_DIR}/include
+#     ${FMT_DIR}/include
+#     ${FFMPEG}/include
+#     ${SDL}/include
+#     ${Boost_INCLUDE_DIRS}
+# )
+
+# 可以定义一个宏，在程序中使用
+target_compile_definitions(worker PUBLIC PI=3.14)
 
 target_link_libraries(
     worker 
@@ -76,4 +90,6 @@ target_link_libraries(
     swscale
     ${Boost_LIBRARIES}
 )
+
+# 1.cmake编译步骤，mkdir build -> cd build -> cmake .. -> make -j4，最后生成可执行文件在runtime目录
 # 用g++编译指令如下：g++ worker.cpp -o test -std=c++11 -lcurl -lspdlog -lfmt   

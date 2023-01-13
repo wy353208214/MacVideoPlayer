@@ -53,6 +53,7 @@ void paraseFlv(char *url) {
 
     FILE *pFile = fopen(url, "rb+");
     FlvHeader flvHeader;
+    cout<<"sizeof header："<<sizeof(FlvHeader)<<endl;
     fread(&flvHeader, 1, sizeof(FlvHeader), pFile);
     bitset<8> temp(flvHeader.flags);
 
@@ -122,6 +123,37 @@ void paraseFlv(char *url) {
         // 3. 读取tagData，tagheader中的datasize个字节大小
         fseek(pFile, dataSize, SEEK_CUR);
     } while(!feof(pFile));
+}
+
+
+struct AAC_HEADER {
+    uint16_t syncword;                  // 12 bit
+    uint8_t id;                         // 1 bit
+    uint8_t layer;                      // 2 bit
+    uint8_t protection_absent;          // 1 bit
+    uint8_t profile;                    // 2 bit
+    uint8_t sampling_frequency_index;   // 4 bit
+    uint8_t private_bit;                // 1 bit
+    uint8_t channel_configure;          // 3 bit
+    uint8_t original_copy;              // 1 bit
+    uint8_t home;                       // 1 bit
+    uint8_t copyright_id_bit;           // 1 bit
+    uint8_t copyright_id_start;         // 1 bit
+    uint16_t aac_frame_length;          // 13 bit
+    uint16_t adts_buffer_fullness;      // 11 bit
+    uint8_t number_raw_data_blocks;     // 2 bit
+};
+
+void parsaerAAC(char *url) {
+    FILE *file = fopen(url, "rb+");
+
+    uint8_t buffer[2];
+    size_t size = fread(buffer, 1, 2, file);
+    int syncword = (buffer[0] * 256 + buffer[1])>>4;
+    cout<<"syncword: "<<syncword<<endl;
+    int id = (buffer[1] & 0x0f)>>3;
+    cout<<"id: "<<id<<endl;
+    fclose(file);
 }
 
 #endif //
